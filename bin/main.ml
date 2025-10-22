@@ -59,6 +59,29 @@ let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   done;
   !holes
 
+let filter_holes ~filter_outliers holes =
+  let len_holes = CCList.length holes in
+  let avg_xdiff, avg_ydiff =
+    holes
+    |> CCList.fold_left (fun (sum_xdiff, sum_ydiff) hole ->
+      let xdiff = snd hole.x_range - fst hole.x_range in
+      let ydiff = snd hole.y_range - fst hole.y_range in
+      sum_xdiff + xdiff, sum_ydiff + ydiff
+    ) (0, 0)
+    |> (fun (sum_xdiff, sum_ydiff) ->
+      float sum_xdiff /. float len_holes,
+      float sum_ydiff /. float len_holes
+    )
+  in
+  holes |> CCList.filter (fun hole ->
+    let xdiff = snd hole.x_range - fst hole.x_range in
+    let ydiff = snd hole.y_range - fst hole.y_range in
+    let xdiff_outlying = float xdiff /. avg_xdiff in
+    let ydiff_outlying = float ydiff /. avg_ydiff in
+    xdiff_outlying > 0.3 && xdiff_outlying < 3.0 &&
+    ydiff_outlying > 0.3 && ydiff_outlying < 3.0
+  )
+
 let extract_single_pixmap image =
   match image.Image.pixels with
   | Grey pixmap
@@ -66,7 +89,7 @@ let extract_single_pixmap image =
   | RGB (pixmap, _, _)
   | RGBA (pixmap, _, _, _) -> pixmap
 
-let main image_file output x_range y_range =
+let main image_file output x_range y_range filter_outliers =
   let xmin_out, xmax_out = match x_range with
     | None -> 0., 1.
     | Some (xmin :: xmax :: []) -> xmin, xmax
@@ -95,6 +118,7 @@ let main image_file output x_range y_range =
         ~max_val:image.max_val
         ~pixels
         ~blobmap
+      |> filter_holes ~filter_outliers
     in
     match output with
     | `Blobmap ->

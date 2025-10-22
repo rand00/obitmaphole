@@ -1,9 +1,4 @@
-
-type blob = {
-  identity : int;
-  x_range : int * int;
-  y_range : int * int;
-}
+open Blob.T
 
 let min_pct_bright = 0.4
 
@@ -104,7 +99,9 @@ let main image_file output x_range y_range =
     match output with
     | `Blobmap ->
       Format.eprintf ".. writing blobmap (if file doesn't exist already)\n%!";
-      Blobmap.to_image blobmap |> ImageLib_unix.writefile "blobmap.png"
+      Blobmap.to_image blobmap
+      |> Blob.Image.add_centers ~holes
+      |> ImageLib_unix.writefile "blobmap.png"
     | `Centers ->
       Format.eprintf ".. printing centers\n%!";
       holes |> CCList.iter (fun hole ->

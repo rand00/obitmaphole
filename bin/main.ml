@@ -1,12 +1,11 @@
 
-let min_pct_bright = 0.4
-
 type blob = {
   identity : int;
   x_range : int * int;
   y_range : int * int;
 }
 
+let min_pct_bright = 0.4
 
 let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
   let rec aux ~x ~y acc_blob =
@@ -55,7 +54,6 @@ let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   let holes = ref [] in
   for x = 0 to w-1 do
     for y = 0 to h-1 do
-      (*> Note: choosing minimum brightness here*)
       let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
       let is_checked = CCOption.is_some blobmap.(x).(y) in
       if pct_bright > min_pct_bright && not is_checked then
@@ -93,11 +91,21 @@ let main image_file output =
         ~pixels
         ~blobmap
     in
-    (*> goto output*)
     match output with
     | `Blobmap ->
-      let blobmap_image = Blobmap.to_image blobmap in
-      ImageLib_unix.writefile "blobmap.png" blobmap_image
+      Format.eprintf ".. writing blobmap (if file doesn't exist already)\n%!";
+      Blobmap.to_image blobmap |> ImageLib_unix.writefile "blobmap.png"
+    | `Centers ->
+      Format.eprintf ".. printing centers\n%!";
+      holes |> CCList.iter (fun hole ->
+        let xmin, xmax = hole.x_range in
+        let xdiff = xmax - xmin in
+        let center_x_pct = (float xmin +. float xdiff /. 2.) /. float image.width in
+        let ymin, ymax = hole.y_range in
+        let ydiff = ymax - ymin in
+        let center_y_pct = (float ymin +. float ydiff /. 2.) /. float image.height in
+        Format.printf "hole-%d: %f, %f\n%!" hole.identity center_x_pct center_y_pct;
+      )
     | `Gcode ->
       failwith "todo"
 

@@ -71,7 +71,17 @@ let extract_single_pixmap image =
   | RGB (pixmap, _, _)
   | RGBA (pixmap, _, _, _) -> pixmap
 
-let main image_file output =
+let main image_file output x_range y_range =
+  let xmin_out, xmax_out = match x_range with
+    | None -> 0., 1.
+    | Some (xmin :: xmax :: []) -> xmin, xmax
+    | _ -> failwith "You can only pass two values to x-range"
+  in
+  let ymin_out, ymax_out = match y_range with
+    | None -> 0., 1.
+    | Some (ymin :: ymax :: []) -> ymin, ymax
+    | _ -> failwith "You can only pass two values to y-range"
+  in
   match image_file with
   | None -> failwith "You need to pass an image to analyze"
   | Some image_file -> 
@@ -100,11 +110,17 @@ let main image_file output =
       holes |> CCList.iter (fun hole ->
         let xmin, xmax = hole.x_range in
         let xdiff = xmax - xmin in
-        let center_x_pct = (float xmin +. float xdiff /. 2.) /. float image.width in
+        let center_x_pct =
+          (float xmin +. float xdiff /. 2.) /. float image.width in
+        let center_x =
+          Gg.Float.remap ~x0:0. ~x1:1. ~y0:xmin_out ~y1:xmax_out center_x_pct in
         let ymin, ymax = hole.y_range in
         let ydiff = ymax - ymin in
-        let center_y_pct = (float ymin +. float ydiff /. 2.) /. float image.height in
-        Format.printf "hole-%d: %f, %f\n%!" hole.identity center_x_pct center_y_pct;
+        let center_y_pct =
+          (float ymin +. float ydiff /. 2.) /. float image.height in
+        let center_y =
+          Gg.Float.remap ~x0:0. ~x1:1. ~y0:ymin_out ~y1:ymax_out center_y_pct in
+        Format.printf "hole-%d: %f, %f\n%!" hole.identity center_x center_y;
       )
     | `Gcode ->
       failwith "todo"

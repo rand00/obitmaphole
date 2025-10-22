@@ -10,5 +10,6 @@
   imagelib
   imagelib.unix
   containers
+  gg
   )
  )

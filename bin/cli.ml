@@ -7,9 +7,20 @@ let image_file =
   let docv = "FILE" in
   Arg.(value & opt (some file) None & info ["image"] ~docv ~doc)
 
+let x_range = 
+  let doc = "Range of x-values output" in
+  let docv = "FLOAT,FLOAT" in
+  Arg.(value & opt (some (list float)) None & info ["x-range"] ~docv ~doc)
+
+let y_range = 
+  let doc = "Range of y-values output" in
+  let docv = "FLOAT,FLOAT" in
+  Arg.(value & opt (some (list float)) None & info ["y-range"] ~docv ~doc)
+
 let output =
+  (*> goto support GCODE too*)
+  (*> goto change this when gcode is implemented*)
   let default_output = `Blobmap in
-  (*> goto support CENTERS|GCODE too*)
   let all_variants =
     Output_t.all
     |> CCList.map Output_t.to_string
@@ -30,6 +41,6 @@ let apply f =
   let cmd =
     Cmd.v
       Cmd.(info "bitmapholes" ~doc)
-      Term.(const f $ image_file $ output)
+      Term.(const f $ image_file $ output $ x_range $ y_range)
   in
   Cmd.(eval cmd |> exit)

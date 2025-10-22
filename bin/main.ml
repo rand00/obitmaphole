@@ -7,6 +7,7 @@ type blob = {
   y_range : int * int;
 }
 
+
 let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
   let rec aux ~x ~y acc_blob =
     if x < 0 || x >= w || y < 0 || y >= h then acc_blob else begin
@@ -49,11 +50,8 @@ let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
     y_range = y, y;
   }
 
-let find_holes ~w ~h ~max_val ~pixels =
+let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   let max_val = float max_val in
-  let blobmap =
-    CCArray.init w (fun _x -> CCArray.init h (fun _y -> None))
-  in
   let holes = ref [] in
   for x = 0 to w-1 do
     for y = 0 to h-1 do
@@ -75,7 +73,7 @@ let extract_single_pixmap image =
   | RGB (pixmap, _, _)
   | RGBA (pixmap, _, _, _) -> pixmap
 
-let main image_file =
+let main image_file output =
   match image_file with
   | None -> failwith "You need to pass an image to analyze"
   | Some image_file -> 
@@ -83,15 +81,25 @@ let main image_file =
     (*> Note: as we only analyze b/w images, the red channel is enough for
         non-greytone bitmaps*)
     let pixels = extract_single_pixmap image in
+    let blobmap =
+      CCArray.init image.width (fun _x ->
+        CCArray.init image.height (fun _y -> None))
+    in
     let holes =
       find_holes
         ~w:image.width
         ~h:image.height
         ~max_val:image.max_val
         ~pixels
+        ~blobmap
     in
-    (*> goto use holes to generate gcode*)
-    failwith "todo"
+    (*> goto output*)
+    match output with
+    | `Blobmap ->
+      let blobmap_image = Blobmap.to_image blobmap in
+      ImageLib_unix.writefile "blobmap.png" blobmap_image
+    | `Gcode ->
+      failwith "todo"
 
 let () = Cli.apply main
   

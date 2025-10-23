@@ -7,9 +7,10 @@ mill PCB's.
 Apparantly one often has a regular bitmap image one wants to mill - so this program finds all the
 holes and exports G-code for the CNC mill.
 
-But why doesn't one just use *Inkscape* as mentioned later for milling the holes of the PCB too?
+But why doesn't one just use *Inkscape* as mentioned later for generating the STL for milling the
+holes of the PCB too?
 The problem is that the holes will not be exactly round, and they will not be centered in a single
-spot - and there will be many of them.
+spot - and there will be many of them, so it's cumbersome to do by hand.
 
 ## Hacky image-to-Gcode Workflow &trade;
 

@@ -2,6 +2,7 @@
  (public_name bitmapholes)
  (name main)
  (modes native)
+ (promote (until-clean))
  (flags (:standard
          (-w -27-33-32-26-69)
          ))

@@ -1,4 +1,4 @@
-# `obitmaphole`: find holes, export gcode 
+# `obitmaphole`
 
 At [Copenhagen Music Maker Space](https://musicmakerspace.dk/) we are working with an
 [Roland SRM-20 CNC mill](https://musicmakerspace.dk/wiki/doku.php?id=cnc) to e.g.

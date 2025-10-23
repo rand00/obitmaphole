@@ -1,13 +1,13 @@
-# `obitmaphole` - find the holes, export the gcode 
+# `obitmaphole`: find the holes, export the gcode 
 
-At [copenhagen music maker space](https://musicmakerspace.dk/) we are working with an
+At [Copenhagen Music Maker Space](https://musicmakerspace.dk/) we are working with an
 [Roland SRM-20 CNC mill](https://musicmakerspace.dk/wiki/doku.php?id=cnc) to e.g.
 mill PCB's.
 
-Apparantly one often has an image one wants to mill - so this program finds all the
+Apparantly one often has a regular bitmap image one wants to mill - so this program finds all the
 holes and exports G-code for the CNC mill.
 
-## Hacky image-to-Gcode Workflow &#2122
+## Hacky image-to-Gcode Workflow &trade;
 
 ### PCB paths 
 * edit your PCB bitmap in [Gimp](https://www.gimp.org/downloads/)

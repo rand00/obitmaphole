@@ -23,8 +23,9 @@ spot - and there will be many of them.
 * use the black bucket tool in Gimp to fill out everything but the lightly coloured holes of the PCB bitmap
 * use `obitmaphole` to generate the G-code:
   * `obitmaphole --image <image-file> --output blobmap`
-    * check the generated `blobmap.png` for if your holes are recognized properly - they will be colourized and marked with a cross that signifies the bounding box and the center 
-    * check the terminal for potentially *ignored outliers*
+    * hole-blobs are found by their lightness - and the space between them should be near black
+    * check the generated `blobmap.png` for if your holes are recognized properly - they will be colourized and marked with a cross that signifies the bounding box and the center
+    * also check the terminal `stderr` for potentially *ignored outliers*
   * `obitmaphole --image <image-file> --x-range 0,<width-in-mm> --y-range 0,<height-in-mm> --output gcode`
     * you specify the same width and height in mm, as the SVG and bitmap has
     * the G-code is printed to `stdout`

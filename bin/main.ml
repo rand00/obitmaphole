@@ -59,7 +59,7 @@ let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   done;
   !holes
 
-let filter_holes holes =
+let filter_holes ~height holes =
   let len_holes = CCList.length holes in
   let avg_xdiff, avg_ydiff =
     holes
@@ -91,7 +91,8 @@ Warning: excluded hole-%d because of being an outlier
 \n%!"
         hole.identity
         (fst hole.x_range)
-        (fst hole.y_range)
+        (*> Note: remapping reverse y-dimension*)
+        (height - snd hole.y_range)
         xdiff
         ydiff
     end;
@@ -145,7 +146,7 @@ let main image_file output x_range y_range dont_filter_outliers =
     let holes =
       if dont_filter_outliers then holes else begin
         Format.eprintf ".. filtering outlier-holes\n%!";
-        holes |> filter_holes
+        holes |> filter_holes ~height:image.height
       end
     in
     match output with

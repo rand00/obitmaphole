@@ -59,7 +59,7 @@ let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   done;
   !holes
 
-let filter_holes ~filter_outliers holes =
+let filter_holes holes =
   let len_holes = CCList.length holes in
   let avg_xdiff, avg_ydiff =
     holes
@@ -118,8 +118,8 @@ let main image_file output x_range y_range filter_outliers =
         ~max_val:image.max_val
         ~pixels
         ~blobmap
-      |> filter_holes ~filter_outliers
     in
+    let holes = if filter_outliers then holes |> filter_holes else holes in
     match output with
     | `Blobmap ->
       Format.eprintf ".. writing blobmap (if file doesn't exist already)\n%!";
@@ -128,6 +128,7 @@ let main image_file output x_range y_range filter_outliers =
       |> ImageLib_unix.writefile "blobmap.png"
     | `Centers ->
       Format.eprintf ".. printing centers\n%!";
+      (*> goto reuse this for gcode?*)
       holes |> CCList.iter (fun hole ->
         let xmin, xmax = hole.x_range in
         let xdiff = xmax - xmin in

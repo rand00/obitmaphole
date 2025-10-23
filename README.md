@@ -16,7 +16,7 @@ spot - and there will be many of them, so it's cumbersome to do by hand.
 
 ### PCB paths 
 * edit your PCB bitmap in [Gimp](https://www.gimp.org/downloads/)
-* use [Inkscape](https://inkscape.org/) to map path-bitmap into an SVG
+* use [Inkscape](https://inkscape.org/) to convert path-bitmap into an SVG
 * export as a compatible format for your CNC software
   * [STL](https://en.wikipedia.org/wiki/STL_(file_format)) ?  
 

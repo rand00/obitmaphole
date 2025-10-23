@@ -49,7 +49,7 @@ pacman -S opam
 opam init
 ```
 
-Install OCaml 4.14.1:
+Install OCaml:
 ```bash
 opam switch create 4.14.2+options
 ```

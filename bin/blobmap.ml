@@ -28,6 +28,13 @@ let to_image (blobmap:t) =
         (* Format.eprintf "DEBUG: writing pixel (%d,%d,%d) for blob-id (%d)\n%!" *)
         (*   r g b *)
         (*   blob_id; *)
+        (* if (r, g, b) = (175, 0, 160) then begin *)
+        (*   Format.eprintf "DEBUG: pink blob is of id %d -- px = (%d, %d)\n%!" *)
+        (*     blob_id x y *)
+        (* end; *)
+        (* if (r, g, b) = (150, 160, 210) then begin *)
+        (*   Format.eprintf "DEBUG: grey-purple blob is of id %d\n%!" blob_id *)
+        (* end; *)
         Image.write_rgb image x y r g b
     done;
   done;

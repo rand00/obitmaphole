@@ -10,7 +10,7 @@ module T = struct
 end
 include T
 
-let to_center ~image ~xmin_out ~xmax_out ~ymin_out ~ymax_out hole =
+let to_center ?(reverse_y_dim=true) ~image ~xmin_out ~xmax_out ~ymin_out ~ymax_out hole =
   let xmin, xmax = hole.x_range in
   let xdiff = xmax - xmin in
   let center_x = float xmin +. float xdiff /. 2. in
@@ -25,11 +25,13 @@ let to_center ~image ~xmin_out ~xmax_out ~ymin_out ~ymax_out hole =
   let ydiff = ymax - ymin in
   let center_y = float ymin +. float ydiff /. 2. in
   let center_y_remapped =
-    center_y |> Gg.Float.remap
-      ~x0:0.
-      ~x1:(float @@ image.Image.height -1)
-      ~y0:ymin_out
-      ~y1:ymax_out 
+    let x0, x1 =
+      if reverse_y_dim then
+        (float @@ image.Image.height -1), 0.
+      else 
+        0., (float @@ image.Image.height -1)
+    in
+    center_y |> Gg.Float.remap ~x0 ~x1 ~y0:ymin_out ~y1:ymax_out 
   in
   center_x_remapped, center_y_remapped
 

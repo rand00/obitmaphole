@@ -7,6 +7,10 @@ mill PCB's.
 Apparantly one often has a regular bitmap image one wants to mill - so this program finds all the
 holes and exports G-code for the CNC mill.
 
+But why doesn't one just use *Inkscape* as mentioned later for milling the holes of the PCB too?
+The problem is that the holes will not be exactly round, and they will not be centered in a single
+spot - and there will be many of them.
+
 ## Hacky image-to-Gcode Workflow &trade;
 
 ### PCB paths 
@@ -15,12 +19,12 @@ holes and exports G-code for the CNC mill.
 * export as a compatible format for your CNC software
   * [STL](https://en.wikipedia.org/wiki/STL_(file_format)) ?  
 
-### PCB holes (using `obitmaphole`)
+### Mill the PCB holes separately 
 * use the black bucket tool in Gimp to fill out everything but the lightly coloured holes of the PCB bitmap
 * use `obitmaphole` to generate the G-code:
   * `obitmaphole --image <image-file> --output blobmap`
-    * check the generated `blobmap.png` for if your holes are recognized properly - they will be colourized and marked with a cross
-    * check the terminal for potentially ignored outliers
+    * check the generated `blobmap.png` for if your holes are recognized properly - they will be colourized and marked with a cross that signifies the bounding box and the center 
+    * check the terminal for potentially *ignored outliers*
   * `obitmaphole --image <image-file> --x-range 0,<width-in-mm> --y-range 0,<height-in-mm> --output gcode`
     * you specify the same width and height in mm, as the SVG and bitmap has
     * the G-code is printed to `stdout`

@@ -3,7 +3,7 @@ open Blob.T
 let min_pct_bright = 0.4
 
 let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
-  let rec aux ~x ~y acc_blob =
+  let rec aux acc_blob (x, y) =
     if x < 0 || x >= w || y < 0 || y >= h then acc_blob else begin
       let is_checked = CCOption.is_some blobmap.(x).(y) in
       if is_checked then acc_blob else begin 
@@ -31,18 +31,18 @@ let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
             x-1, y;
             x  , y+1;
             x  , y-1;
-          ] |> CCList.fold_left (fun acc_blob (x, y) ->
-            aux ~x ~y acc_blob
-          ) acc_blob
+          ] |> CCList.fold_left aux acc_blob
         end
       end
     end
   in
-  aux ~x ~y {
+  let init = {
     identity;
     x_range = x, x;
     y_range = y, y;
   }
+  in
+  aux init (x, y) 
 
 let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   let max_val = float max_val in

@@ -17,14 +17,12 @@ let y_range =
   let docv = "FLOAT,FLOAT" in
   Arg.(value & opt (some (list float)) None & info ["y-range"] ~docv ~doc)
 
-let filter_outliers = 
+let dont_filter_outliers = 
   let doc = "Toggle filtering of outliers" in
-  Arg.(value & flag & info ["filter-outliers"] ~doc)
+  Arg.(value & flag & info ["dont-filter-outliers"] ~doc)
 
 let output =
-  (*> goto support GCODE too*)
-  (*> goto change this when gcode is implemented*)
-  let default_output = `Blobmap in
+  let default_output = `Gcode in
   let all_variants =
     Output_t.all
     |> CCList.map Output_t.to_string
@@ -44,6 +42,6 @@ let apply f =
   let cmd =
     Cmd.v
       Cmd.(info "bitmapholes" ~doc)
-      Term.(const f $ image_file $ output $ x_range $ y_range $ filter_outliers)
+      Term.(const f $ image_file $ output $ x_range $ y_range $ dont_filter_outliers)
   in
   Cmd.(eval cmd |> exit)

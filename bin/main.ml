@@ -78,8 +78,24 @@ let filter_holes holes =
     let ydiff = snd hole.y_range - fst hole.y_range in
     let xdiff_outlying = float xdiff /. avg_xdiff in
     let ydiff_outlying = float ydiff /. avg_ydiff in
-    xdiff_outlying > 0.3 && xdiff_outlying < 3.0 &&
-    ydiff_outlying > 0.3 && ydiff_outlying < 3.0
+    let test = 
+      xdiff_outlying > 0.3 && xdiff_outlying < 3.0 &&
+      ydiff_outlying > 0.3 && ydiff_outlying < 3.0
+    in
+    if not test then begin
+      Format.eprintf "\
+Warning: excluded hole-%d because of being an outlier 
+    bounding-box (in pixels):
+        lower left corner: (%d, %d)
+        width x height: %d x %d\
+\n%!"
+        hole.identity
+        (fst hole.x_range)
+        (fst hole.y_range)
+        xdiff
+        ydiff
+    end;
+    test
   )
 
 let extract_single_pixmap image =
@@ -89,14 +105,20 @@ let extract_single_pixmap image =
   | RGB (pixmap, _, _)
   | RGBA (pixmap, _, _, _) -> pixmap
 
-let main image_file output x_range y_range filter_outliers =
+let main image_file output x_range y_range dont_filter_outliers =
   let xmin_out, xmax_out = match x_range with
-    | None -> 0., 1.
+    | None -> begin match output with
+      | `Gcode -> failwith "For G-code output you will need to specify x/y-range - see --help"
+      | _ -> 0., 1.
+    end 
     | Some (xmin :: xmax :: []) -> xmin, xmax
     | _ -> failwith "You can only pass two values to x-range"
   in
   let ymin_out, ymax_out = match y_range with
-    | None -> 0., 1.
+    | None -> begin match output with
+      | `Gcode -> failwith "For G-code output you will need to specify x/y-range - see --help"
+      | _ -> 0., 1.
+    end 
     | Some (ymin :: ymax :: []) -> ymin, ymax
     | _ -> failwith "You can only pass two values to y-range"
   in
@@ -111,6 +133,7 @@ let main image_file output x_range y_range filter_outliers =
       CCArray.init image.width (fun _x ->
         CCArray.init image.height (fun _y -> None))
     in
+    Format.eprintf ".. finding holes\n%!";
     let holes =
       find_holes
         ~w:image.width
@@ -119,7 +142,12 @@ let main image_file output x_range y_range filter_outliers =
         ~pixels
         ~blobmap
     in
-    let holes = if filter_outliers then holes |> filter_holes else holes in
+    let holes =
+      if dont_filter_outliers then holes else begin
+        Format.eprintf ".. filtering outlier-holes\n%!";
+        holes |> filter_holes
+      end
+    in
     match output with
     | `Blobmap ->
       Format.eprintf ".. writing blobmap (if file doesn't exist already)\n%!";
@@ -138,7 +166,14 @@ let main image_file output x_range y_range filter_outliers =
         Format.printf "hole-%d: %f, %f\n%!" hole.identity center_x center_y;
       )
     | `Gcode ->
-      failwith "todo"
+      Format.eprintf ".. generating G-code\n%!";
+      let hole_centers = holes |> CCList.map (
+        Blob.to_center
+          ~image
+          ~xmin_out ~xmax_out
+          ~ymin_out ~ymax_out
+      ) in
+      Gcode.print ~hole_centers
 
 let () = Cli.apply main
   

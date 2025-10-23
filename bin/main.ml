@@ -128,20 +128,13 @@ let main image_file output x_range y_range filter_outliers =
       |> ImageLib_unix.writefile "blobmap.png"
     | `Centers ->
       Format.eprintf ".. printing centers\n%!";
-      (*> goto reuse this for gcode?*)
       holes |> CCList.iter (fun hole ->
-        let xmin, xmax = hole.x_range in
-        let xdiff = xmax - xmin in
-        let center_x_pct =
-          (float xmin +. float xdiff /. 2.) /. float image.width in
-        let center_x =
-          Gg.Float.remap ~x0:0. ~x1:1. ~y0:xmin_out ~y1:xmax_out center_x_pct in
-        let ymin, ymax = hole.y_range in
-        let ydiff = ymax - ymin in
-        let center_y_pct =
-          (float ymin +. float ydiff /. 2.) /. float image.height in
-        let center_y =
-          Gg.Float.remap ~x0:0. ~x1:1. ~y0:ymin_out ~y1:ymax_out center_y_pct in
+        let center_x, center_y =
+          hole |> Blob.to_center
+            ~image
+            ~xmin_out ~xmax_out
+            ~ymin_out ~ymax_out
+        in
         Format.printf "hole-%d: %f, %f\n%!" hole.identity center_x center_y;
       )
     | `Gcode ->

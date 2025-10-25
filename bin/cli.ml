@@ -21,6 +21,11 @@ let dont_filter_outliers =
   let doc = "Toggle filtering of outliers" in
   Arg.(value & flag & info ["dont-filter-outliers"] ~doc)
 
+let no_blobmap_crosses = 
+  let doc = "Toggle adding crosses to blobmap for visualizing boundingbox/center \
+             of blobs" in
+  Arg.(value & flag & info ["no-blobmap-crosses"] ~doc)
+
 let output =
   let default_output = `Gcode in
   let all_variants =
@@ -42,6 +47,13 @@ let apply f =
   let cmd =
     Cmd.v
       Cmd.(info "bitmapholes" ~doc)
-      Term.(const f $ image_file $ output $ x_range $ y_range $ dont_filter_outliers)
+      Term.(const f
+            $ image_file
+            $ output
+            $ x_range
+            $ y_range
+            $ dont_filter_outliers
+            $ no_blobmap_crosses
+      )
   in
   Cmd.(eval cmd |> exit)

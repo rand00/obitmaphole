@@ -112,7 +112,14 @@ let extract_single_pixmap image =
   | RGB (pixmap, _, _)
   | RGBA (pixmap, _, _, _) -> pixmap
 
-let main image_file output x_range y_range dont_filter_outliers =
+let main
+    image_file
+    output
+    x_range
+    y_range
+    dont_filter_outliers
+    no_blobmap_crosses
+  =
   (* Printexc.record_backtrace true; *)
   let xmin_out, xmax_out = match x_range with
     | None -> begin match output with
@@ -160,7 +167,8 @@ let main image_file output x_range y_range dont_filter_outliers =
     | `Blobmap ->
       Format.eprintf ".. writing blobmap (if file doesn't exist already)\n%!";
       Blobmap.to_image blobmap
-      |> Blob.Image.add_centers ~holes
+      |> (fun img ->
+        if no_blobmap_crosses then img else Blob.Image.add_centers ~holes img)
       |> ImageLib_unix.writefile "blobmap.png"
     | `Centers ->
       Format.eprintf ".. printing centers\n%!";

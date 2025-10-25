@@ -4,7 +4,13 @@ let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity 
   let rec aux acc_blob = function
     | [] -> acc_blob
     | (x, y) :: pixel_queue ->
-      if x < 0 || x >= w || y < 0 || y >= h then acc_blob else begin
+      if x < 0 || x >= w || y < 0 || y >= h then
+        aux acc_blob pixel_queue
+        (*> Note: interesting glitch-art from  this (:
+            .. combine with different orders of pixels added to pixel_queue
+        *)
+        (* acc_blob *)
+      else begin
         let is_checked = CCOption.is_some blobmap.(x).(y) in
         if is_checked then
           aux acc_blob pixel_queue
@@ -29,10 +35,10 @@ let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity 
             in 
             blobmap.(x).(y) <- Some (`Blob identity);
             let pixel_queue = 
-              (x+1, y) ::
-              (x-1, y) ::
               (x  , y+1) ::
               (x  , y-1) ::
+              (x+1, y) ::
+              (x-1, y) ::
               pixel_queue
             in
             aux acc_blob pixel_queue

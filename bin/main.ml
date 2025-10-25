@@ -3,38 +3,44 @@ open Blob.T
 let min_pct_bright = 0.4
 
 let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
-  let rec aux acc_blob (x, y) =
-    if x < 0 || x >= w || y < 0 || y >= h then acc_blob else begin
-      let is_checked = CCOption.is_some blobmap.(x).(y) in
-      if is_checked then acc_blob else begin 
-        let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
-        if pct_bright < min_pct_bright then begin
-          blobmap.(x).(y) <- Some `No_blob;
-          acc_blob
-        end else begin
-          let acc_blob = 
-            let x_range =
-              CCInt.min x (fst acc_blob.x_range),
-              CCInt.max x (snd acc_blob.x_range) in
-            let y_range =
-              CCInt.min y (fst acc_blob.y_range),
-              CCInt.max y (snd acc_blob.y_range) in
-            {
-              acc_blob with
-              x_range;
-              y_range;
-            }
-          in 
-          blobmap.(x).(y) <- Some (`Blob identity);
-          [
-            x+1, y;
-            x-1, y;
-            x  , y+1;
-            x  , y-1;
-          ] |> CCList.fold_left aux acc_blob
+  let rec aux acc_blob = function
+    | [] -> acc_blob
+    | (x, y) :: pixel_queue ->
+      if x < 0 || x >= w || y < 0 || y >= h then acc_blob else begin
+        let is_checked = CCOption.is_some blobmap.(x).(y) in
+        if is_checked then
+          aux acc_blob pixel_queue
+        else begin 
+          let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
+          if pct_bright < min_pct_bright then begin
+            blobmap.(x).(y) <- Some `No_blob;
+            aux acc_blob pixel_queue
+          end else begin
+            let acc_blob = 
+              let x_range =
+                CCInt.min x (fst acc_blob.x_range),
+                CCInt.max x (snd acc_blob.x_range) in
+              let y_range =
+                CCInt.min y (fst acc_blob.y_range),
+                CCInt.max y (snd acc_blob.y_range) in
+              {
+                acc_blob with
+                x_range;
+                y_range;
+              }
+            in 
+            blobmap.(x).(y) <- Some (`Blob identity);
+            let pixel_queue = 
+              (x+1, y) ::
+              (x-1, y) ::
+              (x  , y+1) ::
+              (x  , y-1) ::
+              pixel_queue
+            in
+            aux acc_blob pixel_queue
+          end
         end
       end
-    end
   in
   let init = {
     identity;
@@ -42,7 +48,7 @@ let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
     y_range = y, y;
   }
   in
-  aux init (x, y) 
+  aux init [ x, y ]
 
 let find_holes ~w ~h ~max_val ~pixels ~blobmap =
   let max_val = float max_val in
@@ -107,6 +113,7 @@ let extract_single_pixmap image =
   | RGBA (pixmap, _, _, _) -> pixmap
 
 let main image_file output x_range y_range dont_filter_outliers =
+  (* Printexc.record_backtrace true; *)
   let xmin_out, xmax_out = match x_range with
     | None -> begin match output with
       | `Gcode -> failwith "For G-code output you will need to specify x/y-range - see --help"

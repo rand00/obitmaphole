@@ -34,6 +34,10 @@ let no_blobmap_crosses =
              of blobs" in
   Arg.(value & flag & info ["no-blobmap-crosses"] ~doc)
 
+let glitch_mode = 
+  let doc = "Toggle glitch-mode for blobmap generation (:" in
+  Arg.(value & flag & info ["glitch-mode"] ~doc)
+
 let output =
   let default_output = `Gcode in
   let all_variants =
@@ -63,6 +67,7 @@ let apply f =
             $ dont_filter_outliers
             $ no_blobmap_crosses
             $ min_pct_brightness
+            $ glitch_mode
       )
   in
   Cmd.(eval cmd |> exit)

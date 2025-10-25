@@ -1,15 +1,23 @@
 open Blob.T
 
-let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
+let expand_blob
+    ~min_pct_bright
+    ~x ~y ~w ~h
+    ~max_val
+    ~pixels
+    ~blobmap
+    ~identity 
+    ~glitch_mode
+  = 
   let rec aux acc_blob = function
     | [] -> acc_blob
     | (x, y) :: pixel_queue ->
       if x < 0 || x >= w || y < 0 || y >= h then
-        aux acc_blob pixel_queue
         (*> Note: interesting glitch-art from  this (:
             .. combine with different orders of pixels added to pixel_queue
         *)
-        (* acc_blob *)
+        if glitch_mode then acc_blob else 
+          aux acc_blob pixel_queue
       else begin
         let is_checked = CCOption.is_some blobmap.(x).(y) in
         if is_checked then
@@ -34,12 +42,19 @@ let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity 
               }
             in 
             blobmap.(x).(y) <- Some (`Blob identity);
-            let pixel_queue = 
-              (x  , y+1) ::
-              (x  , y-1) ::
-              (x+1, y) ::
-              (x-1, y) ::
-              pixel_queue
+            let pixel_queue =
+              if glitch_mode && CCRandom.bool () then
+                (x  , y+1) ::
+                (x  , y-1) ::
+                (x+1, y) ::
+                (x-1, y) ::
+                pixel_queue
+              else 
+                (x+1, y) ::
+                (x-1, y) ::
+                (x  , y+1) ::
+                (x  , y-1) ::
+                pixel_queue
             in
             aux acc_blob pixel_queue
           end
@@ -54,7 +69,7 @@ let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity 
   in
   aux init [ x, y ]
 
-let find_holes ~min_pct_bright ~w ~h ~max_val ~pixels ~blobmap =
+let find_holes ~glitch_mode ~min_pct_bright ~w ~h ~max_val ~pixels ~blobmap =
   let max_val = float max_val in
   let holes = ref [] in
   for x = 0 to w-1 do
@@ -70,6 +85,7 @@ let find_holes ~min_pct_bright ~w ~h ~max_val ~pixels ~blobmap =
             ~pixels
             ~blobmap
             ~identity
+            ~glitch_mode
         in
         holes := hole :: !holes
     done
@@ -131,6 +147,7 @@ let main
     dont_filter_outliers
     no_blobmap_crosses
     min_pct_brightness
+    glitch_mode
   =
   (* Printexc.record_backtrace true; *)
   let xmin_out, xmax_out = match x_range with
@@ -163,6 +180,7 @@ let main
     Format.eprintf ".. finding holes\n%!";
     let holes =
       find_holes
+        ~glitch_mode
         ~w:image.width
         ~h:image.height
         ~max_val:image.max_val

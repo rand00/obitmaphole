@@ -1,8 +1,6 @@
 open Blob.T
 
-let min_pct_bright = 0.4
-
-let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
+let expand_blob ~min_pct_bright ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
   let rec aux acc_blob = function
     | [] -> acc_blob
     | (x, y) :: pixel_queue ->
@@ -50,7 +48,7 @@ let expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity =
   in
   aux init [ x, y ]
 
-let find_holes ~w ~h ~max_val ~pixels ~blobmap =
+let find_holes ~min_pct_bright ~w ~h ~max_val ~pixels ~blobmap =
   let max_val = float max_val in
   let holes = ref [] in
   for x = 0 to w-1 do
@@ -59,7 +57,14 @@ let find_holes ~w ~h ~max_val ~pixels ~blobmap =
       let is_checked = CCOption.is_some blobmap.(x).(y) in
       if pct_bright > min_pct_bright && not is_checked then
         let identity = CCList.length !holes in
-        let hole = expand_blob ~x ~y ~w ~h ~max_val ~pixels ~blobmap ~identity in
+        let hole = expand_blob
+            ~min_pct_bright
+            ~x ~y ~w ~h
+            ~max_val
+            ~pixels
+            ~blobmap
+            ~identity
+        in
         holes := hole :: !holes
     done
   done;
@@ -119,6 +124,7 @@ let main
     y_range
     dont_filter_outliers
     no_blobmap_crosses
+    min_pct_brightness
   =
   (* Printexc.record_backtrace true; *)
   let xmin_out, xmax_out = match x_range with
@@ -154,6 +160,7 @@ let main
         ~w:image.width
         ~h:image.height
         ~max_val:image.max_val
+        ~min_pct_bright:min_pct_brightness
         ~pixels
         ~blobmap
     in

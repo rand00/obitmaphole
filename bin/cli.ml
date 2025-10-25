@@ -17,6 +17,14 @@ let y_range =
   let docv = "FLOAT,FLOAT" in
   Arg.(value & opt (some (list float)) None & info ["y-range"] ~docv ~doc)
 
+let min_pct_brightness = 
+  let doc = "The brightness cutoff for distinguishing blobs from background. \
+             Note that currently it's only the red channel of RGB images that is \
+             checked." in
+  let docv = "FLOAT" in
+  let min_pct_bright = 0.4 in
+  Arg.(value & opt float min_pct_bright & info ["min-pct-brightness"] ~docv ~doc)
+
 let dont_filter_outliers = 
   let doc = "Toggle filtering of outliers" in
   Arg.(value & flag & info ["dont-filter-outliers"] ~doc)
@@ -54,6 +62,7 @@ let apply f =
             $ y_range
             $ dont_filter_outliers
             $ no_blobmap_crosses
+            $ min_pct_brightness
       )
   in
   Cmd.(eval cmd |> exit)

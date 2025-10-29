@@ -54,6 +54,53 @@ let output =
   ) in
   Arg.(value & opt format_conv default_output & info ["output"] ~docv ~doc)
 
+let y_dir =
+  let default = `Up in
+  let all_variants =
+    Iter_direction_t.all
+    |> CCList.map Iter_direction_t.to_string
+    |> CCList.map CCString.uppercase_ascii
+    |> CCString.concat "|"
+  in
+  let doc = sp "What direction to iterate y in (one of '%s').\
+                This is only relevant for glitch-mode."
+      all_variants
+  in
+  let docv = "STRING" in
+  let format_conv = Arg.conv' (
+    Iter_direction_t.parse,
+    Iter_direction_t.pp
+  ) in
+  Arg.(value & opt format_conv default & info ["y-dir"] ~docv ~doc)
+
+let x_dir =
+  let default = `Up in
+  let all_variants =
+    Iter_direction_t.all
+    |> CCList.map Iter_direction_t.to_string
+    |> CCList.map CCString.uppercase_ascii
+    |> CCString.concat "|"
+  in
+  let doc = sp "What direction to iterate x in (one of '%s').\
+                This is only relevant for glitch-mode."
+      all_variants
+  in
+  let docv = "STRING" in
+  let format_conv = Arg.conv' (
+    Iter_direction_t.parse,
+    Iter_direction_t.pp
+  ) in
+  Arg.(value & opt format_conv default & info ["x-dir"] ~docv ~doc)
+
+let blob_dir_weights =
+  let default = [ 1.; 1.; 1.; 1. ] in
+  let doc = "Blob iteration direction weights for calculating \
+             probabilities, in the order: x,-x,y,-y. Total of weights \
+             doesn't have to add up to a specific number - they are relative.
+             This is only relevant for glitch-mode." in
+  let docv = "FLOAT,FLOAT,FLOAT,FLOAT" in
+  Arg.(value & opt (list float) default & info ["blob-direction-weights"] ~docv ~doc)
+
 let apply f = 
   let doc = "Find light holes in dark image and export G-code for CNC milling" in
   let cmd =
@@ -68,6 +115,9 @@ let apply f =
             $ no_blobmap_crosses
             $ min_pct_brightness
             $ glitch_mode
+            $ x_dir
+            $ y_dir
+            $ blob_dir_weights
       )
   in
   Cmd.(eval cmd |> exit)

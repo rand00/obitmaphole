@@ -2,11 +2,8 @@ open Blob.T
 
 let ncons vs acc = CCList.fold_right CCList.cons vs acc
 
-let shuffle_head_by_weight l =
-  let total_weigth =
-    l |> CCList.fold_left (fun acc (w, _) -> acc +. w) 0.
-  in
-  let random_v = Random.float total_weigth in
+let shuffle_head_by_weight ~total_weight list =
+  let random_v = Random.float total_weight in
   let rec choose_head_idx acc_weight i = function
     | [] -> None
     | (weight, v) :: rest ->
@@ -16,15 +13,18 @@ let shuffle_head_by_weight l =
       else 
         choose_head_idx acc_weight' (succ i) rest
   in
-  match choose_head_idx 0. 0 l with
+  match choose_head_idx 0. 0 list with
   | Some head_idx -> 
-    let head = CCList.nth l head_idx in
-    let rest = CCList.remove_at_idx head_idx l in
+    let head = CCList.nth list head_idx in
+    let rest = CCList.remove_at_idx head_idx list in
     head :: rest
-  | None -> l
+  | None -> list
 
 let shuffle_by_weight list =
-  let rec shuffle list = match shuffle_head_by_weight list with
+  let total_weight =
+    list |> CCList.fold_left (fun acc (w, _) -> acc +. w) 0.
+  in
+  let rec shuffle list = match shuffle_head_by_weight ~total_weight list with
     | [] 
     | _ :: [] as l -> l
     | head :: tail -> head :: shuffle tail

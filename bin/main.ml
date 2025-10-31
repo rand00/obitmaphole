@@ -4,21 +4,17 @@ let ncons vs acc = CCList.fold_right CCList.cons vs acc
 
 let shuffle_head_by_weight ~total_weight list =
   let random_v = Random.float total_weight in
-  let rec choose_head_idx acc_weight i = function
-    | [] -> None
-    | (weight, v) :: rest ->
+  let rec aux acc_weight acc_list = function
+    | [] -> CCList.rev acc_list
+    | (weight, _v as v_wrap) :: rest ->
       let acc_weight' = acc_weight +. weight in
       if CCFloat.Infix.(acc_weight < random_v && random_v <= acc_weight') then
-        Some i
-      else 
-        choose_head_idx acc_weight' (succ i) rest
+        v_wrap :: (CCList.rev acc_list @ rest)
+      else
+        let acc_list = v_wrap :: acc_list in
+        aux acc_weight' acc_list rest
   in
-  match choose_head_idx 0. 0 list with
-  | Some head_idx -> 
-    let head = CCList.nth list head_idx in
-    let rest = CCList.remove_at_idx head_idx list in
-    head :: rest
-  | None -> list
+  aux 0. [] list
 
 let shuffle_by_weight list =
   let total_weight =

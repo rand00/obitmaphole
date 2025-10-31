@@ -11,7 +11,7 @@ let shuffle_head_by_weight l =
     | [] -> None
     | (weight, v) :: rest ->
       let acc_weight' = acc_weight +. weight in
-      if CCFloat.Infix.(acc_weight < random_v && random_v < acc_weight') then
+      if CCFloat.Infix.(acc_weight < random_v && random_v <= acc_weight') then
         Some i
       else 
         choose_head_idx acc_weight' (succ i) rest

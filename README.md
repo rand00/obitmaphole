@@ -55,7 +55,7 @@ Install OCaml:
 opam switch create 4.14.2+options
 ```
 
-Then clone this repository and install dependencies and `mtag`:
+Then clone this repository and install dependencies and `obitmaphole`:
 ```bash
 git clone https://github.com/rand00/obitmaphole
 cd obitmaphole

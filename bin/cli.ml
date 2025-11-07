@@ -118,7 +118,7 @@ let apply f =
   let doc = "Find light holes in dark image and export G-code for CNC milling" in
   let cmd =
     Cmd.v
-      Cmd.(info "bitmapholes" ~doc)
+      Cmd.(info "obitmaphole" ~doc)
       Term.(const f
             $ image_file
             $ output

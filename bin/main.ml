@@ -216,11 +216,12 @@ module Mode = struct
       =
       let max_val = float max_val in
       let holes = ref [] in
+      let id = ref 0 in
       let iterate ~x ~y =
         let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
         let is_checked = CCOption.is_some blobmap.(x).(y) in
         if pct_bright > min_pct_bright && not is_checked then
-          let identity = CCList.length !holes in
+          let identity = !id in
           let hole = expand_blob
               ~min_pct_bright
               ~x ~y ~w ~h
@@ -231,6 +232,7 @@ module Mode = struct
               ~blob_dir_weights
               ~blob_stop_chance
           in
+          incr id;
           holes := hole :: !holes
       in
       (*> Note: already wrote the code, and CLI flag need to be negation... *)

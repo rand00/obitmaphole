@@ -27,140 +27,226 @@ let shuffle_by_weight list =
   in
   shuffle list
 
-let expand_blob
-    ~min_pct_bright
-    ~x ~y ~w ~h
-    ~max_val
-    ~pixels
-    ~blobmap
-    ~identity 
-    ~glitch_mode
-    ~blob_dir_weights
-  = 
-  let rec aux acc_blob = function
-    | [] -> acc_blob
-    | (x, y) :: pixel_queue ->
-      if x < 0 || x >= w || y < 0 || y >= h then
-        (*> Note: interesting glitch-art from  this (:
-            .. combine with different orders of pixels added to pixel_queue
-        *)
-        if glitch_mode then acc_blob else 
-          aux acc_blob pixel_queue
-      else begin
-        let is_checked = CCOption.is_some blobmap.(x).(y) in
-        if is_checked then
-          aux acc_blob pixel_queue
-        else begin 
-          let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
-          if pct_bright < min_pct_bright then begin
-            blobmap.(x).(y) <- Some `No_blob;
-            aux acc_blob pixel_queue
-          end else begin
-            let acc_blob = 
-              let x_range =
-                CCInt.min x (fst acc_blob.x_range),
-                CCInt.max x (snd acc_blob.x_range) in
-              let y_range =
-                CCInt.min y (fst acc_blob.y_range),
-                CCInt.max y (snd acc_blob.y_range) in
-              {
-                acc_blob with
-                x_range;
-                y_range;
-              }
-            in 
-            blobmap.(x).(y) <- Some (`Blob identity);
-            let pixel_queue =
-              if glitch_mode then begin
-                let points_to_add =
-                  [
-                    x+1, y;
-                    x-1, y;
-                    x  , y+1;
-                    x  , y-1;
-                  ]
-                  |> CCList.combine blob_dir_weights
-                  |> shuffle_by_weight
-                  |> CCList.map (fun (_weight, move) -> move)
-                in
-                ncons points_to_add pixel_queue
-              end else 
-                (x+1, y) ::
-                (x-1, y) ::
-                (x  , y+1) ::
-                (x  , y-1) ::
-                pixel_queue
-            in
-            aux acc_blob pixel_queue
-          end
-        end
-      end
-  in
-  let init = {
-    identity;
-    x_range = x, x;
-    y_range = y, y;
-  }
-  in
-  aux init [ x, y ]
+module Mode = struct
 
-let find_holes
-    ~min_pct_bright
-    ~w ~h
-    ~max_val
-    ~pixels
-    ~blobmap
-    ~glitch_mode
-    ~x_dir
-    ~y_dir
-    ~blob_dir_weights
-  =
-  let max_val = float max_val in
-  let holes = ref [] in
-  let iterate ~x ~y =
-    let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
-    let is_checked = CCOption.is_some blobmap.(x).(y) in
-    if pct_bright > min_pct_bright && not is_checked then
-      let identity = CCList.length !holes in
-      let hole = expand_blob
-          ~min_pct_bright
-          ~x ~y ~w ~h
-          ~max_val
-          ~pixels
-          ~blobmap
-          ~identity
-          ~glitch_mode
-          ~blob_dir_weights
+  module Normal = struct
+
+    let expand_blob
+        ~min_pct_bright
+        ~x ~y ~w ~h
+        ~max_val
+        ~pixels
+        ~blobmap
+        ~identity
+      = 
+      let rec aux acc_blob = function
+        | [] -> acc_blob
+        | (x, y) :: pixel_queue ->
+          if x < 0 || x >= w || y < 0 || y >= h then
+            aux acc_blob pixel_queue
+          else begin
+            let is_checked = CCOption.is_some blobmap.(x).(y) in
+            if is_checked then
+              aux acc_blob pixel_queue
+            else begin 
+              let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
+              if pct_bright < min_pct_bright then begin
+                blobmap.(x).(y) <- Some `No_blob;
+                aux acc_blob pixel_queue
+              end else begin
+                let acc_blob = 
+                  let x_range =
+                    CCInt.min x (fst acc_blob.x_range),
+                    CCInt.max x (snd acc_blob.x_range) in
+                  let y_range =
+                    CCInt.min y (fst acc_blob.y_range),
+                    CCInt.max y (snd acc_blob.y_range) in
+                  {
+                    acc_blob with
+                    x_range;
+                    y_range;
+                  }
+                in 
+                blobmap.(x).(y) <- Some (`Blob identity);
+                let pixel_queue =
+                  (x+1, y) ::
+                  (x-1, y) ::
+                  (x  , y+1) ::
+                  (x  , y-1) ::
+                  pixel_queue
+                in
+                aux acc_blob pixel_queue
+              end
+            end
+          end
       in
-      holes := hole :: !holes
-  in
-  begin match x_dir, y_dir with
-    | `Up, `Up -> 
+      let init = {
+        identity;
+        x_range = x, x;
+        y_range = y, y;
+      }
+      in
+      aux init [ x, y ]
+
+    let find_holes
+        ~min_pct_bright
+        ~w ~h
+        ~max_val
+        ~pixels
+        ~blobmap
+      =
+      let max_val = float max_val in
+      let holes = ref [] in
       for x = 0 to w-1 do
         for y = 0 to h-1 do
-          iterate ~x ~y
+          let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
+          let is_checked = CCOption.is_some blobmap.(x).(y) in
+          if pct_bright > min_pct_bright && not is_checked then
+            let identity = CCList.length !holes in
+            let hole = expand_blob
+                ~min_pct_bright
+                ~x ~y ~w ~h
+                ~max_val
+                ~pixels
+                ~blobmap
+                ~identity
+            in
+            holes := hole :: !holes
         done
-      done
-    | `Down, `Up -> 
-      for x = w-1 downto 0 do
-        for y = 0 to h-1 do
-          iterate ~x ~y
-        done
-      done
-    | `Down, `Down -> 
-      for x = w-1 downto 0 do
-        for y = h-1 downto 0 do
-          iterate ~x ~y
-        done
-      done
-    | `Up, `Down -> 
-      for x = 0 to w-1 do
-        for y = h-1 downto 0 do
-          iterate ~x ~y
-        done
-      done
-  end;
-  !holes
+      done;
+      !holes
+        
+  end
+
+  module Glitch = struct
+    
+    let expand_blob
+        ~min_pct_bright
+        ~x ~y ~w ~h
+        ~max_val
+        ~pixels
+        ~blobmap
+        ~identity 
+        ~blob_dir_weights
+      = 
+      let rec aux acc_blob = function
+        | [] -> acc_blob
+        | (x, y) :: pixel_queue ->
+          if x < 0 || x >= w || y < 0 || y >= h then
+            (*> Note: interesting glitch-art from  this (instead of rec call) (:
+                .. combine with different orders of pixels added to pixel_queue
+            *)
+            acc_blob 
+          else begin
+            let is_checked = CCOption.is_some blobmap.(x).(y) in
+            if is_checked then
+              aux acc_blob pixel_queue
+            else begin 
+              let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
+              if pct_bright < min_pct_bright then begin
+                blobmap.(x).(y) <- Some `No_blob;
+                aux acc_blob pixel_queue
+              end else begin
+                let acc_blob = 
+                  let x_range =
+                    CCInt.min x (fst acc_blob.x_range),
+                    CCInt.max x (snd acc_blob.x_range) in
+                  let y_range =
+                    CCInt.min y (fst acc_blob.y_range),
+                    CCInt.max y (snd acc_blob.y_range) in
+                  {
+                    acc_blob with
+                    x_range;
+                    y_range;
+                  }
+                in 
+                blobmap.(x).(y) <- Some (`Blob identity);
+                let pixel_queue =
+                  let points_to_add =
+                    [
+                      x+1, y;
+                      x-1, y;
+                      x  , y+1;
+                      x  , y-1;
+                    ]
+                    |> CCList.combine blob_dir_weights
+                    |> shuffle_by_weight
+                    |> CCList.map (fun (_weight, move) -> move)
+                  in
+                  ncons points_to_add pixel_queue
+                in
+                aux acc_blob pixel_queue
+              end
+            end
+          end
+      in
+      let init = {
+        identity;
+        x_range = x, x;
+        y_range = y, y;
+      }
+      in
+      aux init [ x, y ]
+
+    let find_holes
+        ~min_pct_bright
+        ~w ~h
+        ~max_val
+        ~pixels
+        ~blobmap
+        ~x_dir
+        ~y_dir
+        ~blob_dir_weights
+      =
+      let max_val = float max_val in
+      let holes = ref [] in
+      let iterate ~x ~y =
+        let pct_bright = float (Image.Pixmap.get pixels x y) /. max_val in
+        let is_checked = CCOption.is_some blobmap.(x).(y) in
+        if pct_bright > min_pct_bright && not is_checked then
+          let identity = CCList.length !holes in
+          let hole = expand_blob
+              ~min_pct_bright
+              ~x ~y ~w ~h
+              ~max_val
+              ~pixels
+              ~blobmap
+              ~identity
+              ~blob_dir_weights
+          in
+          holes := hole :: !holes
+      in
+      begin match x_dir, y_dir with
+        | `Up, `Up -> 
+          for x = 0 to w-1 do
+            for y = 0 to h-1 do
+              iterate ~x ~y
+            done
+          done
+        | `Down, `Up -> 
+          for x = w-1 downto 0 do
+            for y = 0 to h-1 do
+              iterate ~x ~y
+            done
+          done
+        | `Down, `Down -> 
+          for x = w-1 downto 0 do
+            for y = h-1 downto 0 do
+              iterate ~x ~y
+            done
+          done
+        | `Up, `Down -> 
+          for x = 0 to w-1 do
+            for y = h-1 downto 0 do
+              iterate ~x ~y
+            done
+          done
+      end;
+      !holes
+
+  end
+
+end
 
 let filter_holes ~height holes =
   let len_holes = CCList.length holes in
@@ -251,18 +337,26 @@ let main
         CCArray.init image.height (fun _y -> None))
     in
     Format.eprintf ".. finding holes\n%!";
-    let holes =
-      find_holes
-        ~w:image.width
-        ~h:image.height
-        ~max_val:image.max_val
-        ~min_pct_bright:min_pct_brightness
-        ~pixels
-        ~blobmap
-        ~glitch_mode
-        ~x_dir
-        ~y_dir
-        ~blob_dir_weights
+    let holes = match glitch_mode with
+      | false ->
+        Mode.Normal.find_holes
+          ~w:image.width
+          ~h:image.height
+          ~max_val:image.max_val
+          ~min_pct_bright:min_pct_brightness
+          ~pixels
+          ~blobmap
+      | true -> 
+        Mode.Glitch.find_holes
+          ~w:image.width
+          ~h:image.height
+          ~max_val:image.max_val
+          ~min_pct_bright:min_pct_brightness
+          ~pixels
+          ~blobmap
+          ~x_dir
+          ~y_dir
+          ~blob_dir_weights
     in
     let holes =
       if dont_filter_outliers then holes else begin

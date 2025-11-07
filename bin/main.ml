@@ -139,6 +139,7 @@ module Mode = struct
         ~blobmap
         ~identity 
         ~blob_dir_weights
+        ~blob_stop_chance
       = 
       let rec aux acc_blob = function
         | [] -> acc_blob
@@ -147,7 +148,9 @@ module Mode = struct
             (*> Note: interesting glitch-art from  this (instead of rec call) (:
                 .. combine with different orders of pixels added to pixel_queue
             *)
-            acc_blob 
+            acc_blob
+          else if CCFloat.Infix.(Random.float 1. < blob_stop_chance) then
+            acc_blob
           else begin
             let is_checked = CCOption.is_some blobmap.(x).(y) in
             if is_checked then
@@ -208,6 +211,7 @@ module Mode = struct
         ~x_dir
         ~y_dir
         ~blob_dir_weights
+        ~blob_stop_chance
         ~iter_y_before_x
       =
       let max_val = float max_val in
@@ -225,6 +229,7 @@ module Mode = struct
               ~blobmap
               ~identity
               ~blob_dir_weights
+              ~blob_stop_chance
           in
           holes := hole :: !holes
       in
@@ -345,6 +350,7 @@ let main
     x_dir
     y_dir
     blob_dir_weights
+    blob_stop_chance
     iter_y_before_x
   =
   (* Printexc.record_backtrace true; *)
@@ -386,6 +392,7 @@ let main
           ~pixels
           ~blobmap
       | true -> 
+        Random.self_init ();
         Mode.Glitch.find_holes
           ~w:image.width
           ~h:image.height
@@ -396,6 +403,7 @@ let main
           ~x_dir
           ~y_dir
           ~blob_dir_weights
+          ~blob_stop_chance
           ~iter_y_before_x
     in
     let holes =

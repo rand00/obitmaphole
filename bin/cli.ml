@@ -106,6 +106,14 @@ let blob_dir_weights =
   let docv = "FLOAT,FLOAT,FLOAT,FLOAT" in
   Arg.(value & opt (list float) default & info ["blob-direction-weights"] ~docv ~doc)
 
+let blob_stop_chance =
+  let default = 0. in
+  let doc = "The chance of blob stopping expanding. It always stops when \
+             hitting edges of image or other blobs in glitch-mode. \
+             This is only relevant for glitch-mode." in
+  let docv = "FLOAT" in
+  Arg.(value & opt float default & info ["blob-stop-chance"] ~docv ~doc)
+
 let apply f = 
   let doc = "Find light holes in dark image and export G-code for CNC milling" in
   let cmd =
@@ -123,6 +131,7 @@ let apply f =
             $ x_dir
             $ y_dir
             $ blob_dir_weights
+            $ blob_stop_chance
             $ iter_y_before_x
       )
   in

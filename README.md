@@ -39,6 +39,9 @@ spot - and there will be many of them, so it's cumbersome to do by hand.
   * `centers`: print the hole centers on `stdout` - these are mapped with `--x-range` and `--y-range`
   * `gcode`: print the gcode on `stdout` 
 * filter outlier blobs away; blobs that are too big/small vs the average are ignored by default (see `--help` for toggling)
+* `glitch-mode`: A mode the new tail-recursive `expand_blob` led to. The resulting *blobmap*s were too
+  beautiful to remove this bug; and instead the codebase spiraled into being primarily focused on
+  this mode (; 
 * see `--help` for more info
 
 ## Installation

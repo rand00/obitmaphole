@@ -16,6 +16,17 @@ let shuffle_head_by_weight ~total_weight list =
   in
   aux 0. [] list
 
+(*> Note the partially weird probability-semantics of this:
+  * the head is selected fairly based on weights
+  * the rest of the list has the dice roll more times, the further you get in
+    * so their weights will get a higher chance to get hit
+      * .. but as the list of choices gets shorter here
+        * .. their higher probability will have less and less effect on the resulting order
+          * edgecase: shuffle head of a 0/1-element list and use as tail for longer list
+    * @why; we want _some_ chance of them getting shuffled based on weights
+      * and this chance wouldn't exist if there were no further dice-rolls,
+        * .. as some other weight 'won' last roll, and we don't want to reuse roll
+*)
 let shuffle_by_weight list =
   let total_weight =
     list |> CCList.fold_left (fun acc (w, _) -> acc +. w) 0.

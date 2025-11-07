@@ -208,6 +208,7 @@ module Mode = struct
         ~x_dir
         ~y_dir
         ~blob_dir_weights
+        ~iter_y_before_x
       =
       let max_val = float max_val in
       let holes = ref [] in
@@ -227,28 +228,54 @@ module Mode = struct
           in
           holes := hole :: !holes
       in
-      begin match x_dir, y_dir with
-        | `Up, `Up -> 
+      (*> Note: already wrote the code, and CLI flag need to be negation... *)
+      let iter_x_before_y = not iter_y_before_x in
+      begin match iter_x_before_y, x_dir, y_dir with
+        | true, `Up, `Up -> 
           for x = 0 to w-1 do
             for y = 0 to h-1 do
               iterate ~x ~y
             done
           done
-        | `Down, `Up -> 
+        | false, `Up, `Up -> 
+          for y = 0 to h-1 do
+            for x = 0 to w-1 do
+              iterate ~x ~y
+            done
+          done
+        | true, `Down, `Up -> 
           for x = w-1 downto 0 do
             for y = 0 to h-1 do
               iterate ~x ~y
             done
           done
-        | `Down, `Down -> 
+        | false, `Down, `Up -> 
+          for y = 0 to h-1 do
+            for x = w-1 downto 0 do
+              iterate ~x ~y
+            done
+          done
+        | true, `Down, `Down -> 
           for x = w-1 downto 0 do
             for y = h-1 downto 0 do
               iterate ~x ~y
             done
           done
-        | `Up, `Down -> 
+        | false, `Down, `Down -> 
+          for y = h-1 downto 0 do
+            for x = w-1 downto 0 do
+              iterate ~x ~y
+            done
+          done
+        | true, `Up, `Down -> 
           for x = 0 to w-1 do
             for y = h-1 downto 0 do
+              iterate ~x ~y
+            done
+          done
+        | false, `Up, `Down -> 
+          for y = h-1 downto 0 do
+            for x = 0 to w-1 do
               iterate ~x ~y
             done
           done
@@ -318,6 +345,7 @@ let main
     x_dir
     y_dir
     blob_dir_weights
+    iter_y_before_x
   =
   (* Printexc.record_backtrace true; *)
   let xmin_out, xmax_out = match x_range with
@@ -368,6 +396,7 @@ let main
           ~x_dir
           ~y_dir
           ~blob_dir_weights
+          ~iter_y_before_x
     in
     let holes =
       if dont_filter_outliers then holes else begin

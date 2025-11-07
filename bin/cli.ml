@@ -92,6 +92,11 @@ let x_dir =
   ) in
   Arg.(value & opt format_conv default & info ["x-dir"] ~docv ~doc)
 
+let iter_y_before_x = 
+  let doc = "Toggle the iteration-order when finding blobs. \
+             This is only relevant for glitch-mode." in
+  Arg.(value & flag & info ["iter-y-before-x"] ~doc)
+    
 let blob_dir_weights =
   let default = [ 1.; 1.; 1.; 1. ] in
   let doc = "Blob iteration direction weights for calculating \
@@ -118,6 +123,7 @@ let apply f =
             $ x_dir
             $ y_dir
             $ blob_dir_weights
+            $ iter_y_before_x
       )
   in
   Cmd.(eval cmd |> exit)

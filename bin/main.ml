@@ -348,6 +348,11 @@ let main
     dont_filter_outliers
     no_blobmap_crosses
     min_pct_brightness
+    colour_init
+    colour_step
+    colour_div
+    colour_min
+    colour_max
     glitch_mode
     x_dir
     y_dir
@@ -371,6 +376,20 @@ let main
     end 
     | Some (ymin :: ymax :: []) -> ymin, ymax
     | _ -> failwith "You can only pass two values to y-range"
+  in
+  let colour_config = 
+    let update param setter config = match param with
+      | None -> config
+      | Some (r :: g :: b :: []) -> setter config (r, g, b)
+      | _ -> failwith "You can only pass 3 channels to RGB-colour related \
+                       parameters - see --help"
+    in
+    Colour.default 
+    |> update colour_init (fun c v -> { c with Colour.init = v })
+    |> update colour_step (fun c v -> { c with Colour.step = v })
+    |> update colour_div  (fun c v -> { c with Colour.div = v })
+    |> update colour_min  (fun c v -> { c with Colour.min = v })
+    |> update colour_max  (fun c v -> { c with Colour.max = v })
   in
   match image_file with
   | None -> failwith "You need to pass an image to analyze"
@@ -417,7 +436,7 @@ let main
     match output with
     | `Blobmap ->
       Format.eprintf ".. writing blobmap\n%!";
-      Blobmap.to_image blobmap
+      Blobmap.to_image ~colour_config blobmap
       |> (fun img ->
         if no_blobmap_crosses then img else Blob.Image.add_centers ~holes img)
       |> ImageLib_unix.writefile "blobmap.png"

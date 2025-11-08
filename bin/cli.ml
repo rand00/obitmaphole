@@ -114,6 +114,31 @@ let blob_stop_chance =
   let docv = "FLOAT" in
   Arg.(value & opt float default & info ["blob-stop-chance"] ~docv ~doc)
 
+let colour_init =
+  let doc = "Sets the initial rgb colour for automatic colour-generation." in
+  let docv = "INT,INT,INT" in
+  Arg.(value & opt (some (list int)) None & info ["colour-init"] ~docv ~doc)
+
+let colour_step =
+  let doc = "Sets the rgb colour step for automatic colour-generation." in
+  let docv = "INT,INT,INT" in
+  Arg.(value & opt (some (list int)) None & info ["colour-step"] ~docv ~doc)
+
+let colour_div =
+  let doc = "Sets the divisor per rgb channel for automatic colour-generation." in
+  let docv = "INT,INT,INT" in
+  Arg.(value & opt (some (list int)) None & info ["colour-div"] ~docv ~doc)
+
+let colour_min =
+  let doc = "Sets the minimum values per rgb channel for automatic colour-generation." in
+  let docv = "INT,INT,INT" in
+  Arg.(value & opt (some (list int)) None & info ["colour-min"] ~docv ~doc)
+
+let colour_max =
+  let doc = "Sets the maximum values per rgb channel for automatic colour-generation." in
+  let docv = "INT,INT,INT" in
+  Arg.(value & opt (some (list int)) None & info ["colour-max"] ~docv ~doc)
+
 let apply f = 
   let doc = "Find light holes in dark image and export G-code for CNC milling" in
   let cmd =
@@ -127,6 +152,11 @@ let apply f =
             $ dont_filter_outliers
             $ no_blobmap_crosses
             $ min_pct_brightness
+            $ colour_init
+            $ colour_step
+            $ colour_div
+            $ colour_min
+            $ colour_max
             $ glitch_mode
             $ x_dir
             $ y_dir

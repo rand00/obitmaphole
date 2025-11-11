@@ -380,7 +380,11 @@ let main
   let colour_config = 
     let update param setter config = match param with
       | None -> config
-      | Some (r :: g :: b :: []) -> setter config (r, g, b)
+      | Some (r :: g :: b :: []) ->
+        if CCInt.Infix.(r > 0 && g > 0 && b > 0) then
+          setter config (r, g, b)
+        else
+          failwith "All colour-parameters need to be > 0"
       | _ -> failwith "You can only pass 3 channels to RGB-colour related \
                        parameters - see --help"
     in

@@ -32,10 +32,10 @@ let b (_, _, b) = b
 
 let rgb_of_blob_id ~config id =
   let c = config in
-  let def_i get = (get c.init) + id * (get c.step) in
+  let def_i get = get c.init + id * get c.step in
   let i_r, i_g, i_b = def_i r, def_i g, def_i b in
   let def_channel i get =
-    ((get c.min) + (i / (get c.div))) mod CCInt.(min 255 (get c.max))
+    (get c.min + i / get c.div) mod CCInt.(min 255 (get c.max))
   in
   let r = def_channel i_r r in
   let g = def_channel i_g g in

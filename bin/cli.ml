@@ -3,17 +3,17 @@ open Cmdliner
 let sp = Format.sprintf
 
 let image_file = 
-  let doc = "The image to analyze" in
+  let doc = "The image to analyze - this input is required." in
   let docv = "FILE" in
   Arg.(value & opt (some file) None & info ["image"] ~docv ~doc)
 
 let x_range = 
-  let doc = "Range of x-values output" in
+  let doc = "Range of x-values output. This is e.g. relevant for gcode output." in
   let docv = "FLOAT,FLOAT" in
   Arg.(value & opt (some (list float)) None & info ["x-range"] ~docv ~doc)
 
 let y_range = 
-  let doc = "Range of y-values output" in
+  let doc = "Range of y-values output. This is e.g. relevant for gcode output." in
   let docv = "FLOAT,FLOAT" in
   Arg.(value & opt (some (list float)) None & info ["y-range"] ~docv ~doc)
 
@@ -35,11 +35,13 @@ let no_blobmap_crosses =
   Arg.(value & flag & info ["no-blobmap-crosses"] ~doc)
 
 let glitch_mode = 
-  let doc = "Toggle glitch-mode for blobmap generation (:" in
+  let doc = "Toggle glitch-mode for blobmap generation (: You'll probably only \
+             find this creatively useful, and is intended for blobmaps - see \
+             --output parameter." in 
   Arg.(value & flag & info ["glitch-mode"] ~doc)
 
 let output =
-  let default_output = `Gcode in
+  let default_output = `Blobmap in
   let all_variants =
     Output_t.all
     |> CCList.map Output_t.to_string
@@ -115,32 +117,40 @@ let blob_stop_chance =
   Arg.(value & opt float default & info ["blob-stop-chance"] ~docv ~doc)
 
 let colour_init =
-  let doc = "Sets the initial rgb colour for automatic colour-generation." in
+  let doc = "Sets the initial RGB colour for automatic colour-generation. \
+             These values wrap when getting > 255." in
   let docv = "INT,INT,INT" in
   Arg.(value & opt (some (list int)) None & info ["colour-init"] ~docv ~doc)
 
 let colour_step =
-  let doc = "Sets the rgb colour step for automatic colour-generation." in
+  let doc = "Sets the RGB colour step for automatic colour-generation. \
+             Big steps lead to more variation in colour-channel." in
   let docv = "INT,INT,INT" in
   Arg.(value & opt (some (list int)) None & info ["colour-step"] ~docv ~doc)
 
 let colour_div =
-  let doc = "Sets the divisor per rgb channel for automatic colour-generation." in
+  let doc = "Sets the divisor per RGB channel for automatic colour-generation. \
+             This makes the respective channel change more slowly. As we work with \
+             integer division, this parameter doesn't have the same semantics as \
+             '--colour-step'." in
   let docv = "INT,INT,INT" in
   Arg.(value & opt (some (list int)) None & info ["colour-div"] ~docv ~doc)
 
 let colour_min =
-  let doc = "Sets the minimum values per rgb channel for automatic colour-generation." in
+  let doc = "Sets the minimum values per RGB channel for automatic colour-generation, \
+             i.e. this limits the possible output-value of the generated colour." in
   let docv = "INT,INT,INT" in
   Arg.(value & opt (some (list int)) None & info ["colour-min"] ~docv ~doc)
 
 let colour_max =
-  let doc = "Sets the maximum values per rgb channel for automatic colour-generation." in
+  let doc = "Sets the maximum values per RGB channel for automatic colour-generation, \
+             i.e. this limits the possible output-value of the generated colour." in
   let docv = "INT,INT,INT" in
   Arg.(value & opt (some (list int)) None & info ["colour-max"] ~docv ~doc)
 
 let apply f = 
-  let doc = "Find light holes in dark image and export G-code for CNC milling" in
+  let doc = "Find light holes in dark images and export G-code for CNC milling... \
+             or exploit the blob-finding algorithm creatively in glitch-mode!" in
   let cmd =
     Cmd.v
       Cmd.(info "obitmaphole" ~doc)
